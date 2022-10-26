@@ -8,11 +8,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -30,55 +27,53 @@ import kotlinx.coroutines.delay
 @Composable
 fun Sharingan() {
 
-    var aplhaValue by remember { mutableStateOf(0f) }
-    val animatedApha by animateFloatAsState(
-        targetValue = aplhaValue, animationSpec = tween(
-            durationMillis = 3000,
+    val millisDuration = 1500
+    val orangeColor = Color(0xFFD55654)
+    val blackOrangishBgColor = Color(0xFF160909)
+
+    var alphaValue by remember { mutableStateOf(0f) }
+    val animatedAlpha by animateFloatAsState(
+        targetValue = alphaValue,
+        animationSpec = tween(
+            durationMillis = millisDuration * 2,
+            easing = FastOutSlowInEasing
+        )
+    )
+
+    var scaleValue by remember { mutableStateOf(1.3f) }
+    val animatedScale by animateFloatAsState(
+        targetValue = scaleValue,
+        animationSpec = tween(
+            durationMillis = millisDuration,
             easing = LinearEasing
         )
     )
 
-    val millisDuration = 2000
-    var scaleValue by remember { mutableStateOf(1.3f) }
-    val animatedSize by animateFloatAsState(
-        targetValue = scaleValue, animationSpec = tween(
-            durationMillis = millisDuration, easing = FastOutSlowInEasing
+    var angleValue by remember { mutableStateOf(0f) }
+    val animatedAngle by animateFloatAsState(
+        targetValue = angleValue * 1.5f,
+        animationSpec = tween(
+            durationMillis = millisDuration + 2000,
+            easing = FastOutSlowInEasing
         )
     )
 
     var bgScaleValue by remember { mutableStateOf(1f) }
-    val bgAnimatedScale by animateFloatAsState(
-        targetValue = bgScaleValue,
+    val animatedBgScale by animateFloatAsState(
+        targetValue = alphaValue,
     )
-
-    var angleValue by remember { mutableStateOf(0f) }
-    val animatedAngle by animateFloatAsState(
-        targetValue = angleValue,
-        animationSpec = tween(
-            millisDuration + 2000,
-            easing = FastOutSlowInEasing
-        ),
-    )
-
-    val orange = Color(0xFFD55654)
-
-    val orangishColor = Color(0xFF160909)
 
     LaunchedEffect(Unit) {
-        scaleValue = .95f
-        angleValue = -360f
-        delay(millisDuration.toLong() + 800)
+        scaleValue = 1f
+        angleValue = -720f
+        delay(millisDuration.toLong() + 1000)
         angleValue = 720f
-        aplhaValue = 1f
+        delay(millisDuration.toLong())
         scaleValue = 1.4f
+        alphaValue = 1f
         delay(millisDuration.toLong() - 1000)
-
-
-
         bgScaleValue = 10f
     }
-
-
 
     Canvas(
         modifier = Modifier
@@ -88,61 +83,71 @@ fun Sharingan() {
 
         val w = this.size.width
         val h = this.size.height
-        val gradientCircleRadium = w.times(.31f)
+        val gradientCircleRadius = w.times(.31f)
+        val outerRadius = w.times(.28f)
+        val innerOrangeRadius = w.times(.25f)
+        val coreBlackRadius = w.times(.05f)
+        val blackStrokeRadius = w.times(.16f)
+        val beadRadius = w.times(.030f)
 
         withTransform({
-            rotate(animatedAngle)
-            scale(scale = animatedSize)
-        }
-
-        ) {
+            rotate(degrees = animatedAngle)
+            scale(scale = animatedScale)
+        }) {
 
             // Background spread color circle
             scale(
-                scale = bgAnimatedScale
+                scale = animatedBgScale
             ) {
                 drawCircle(
-                    color = orangishColor, radius = w.times(.10f)
+                    color = blackOrangishBgColor,
+                    radius = w.times(.10f)
                 )
             }
 
             // Gradient circle
             drawCircle(
+                radius = gradientCircleRadius,
                 brush = Brush.radialGradient(
                     listOf(Color.White, Color.Transparent),
                     center = center,
-                    radius = gradientCircleRadium
-                ),
-                radius = gradientCircleRadium,
+                    radius = gradientCircleRadius
+                )
             )
 
-            // Black outer circle
+            // Black Outer circle
             drawCircle(
-                color = Color.Black, radius = w.times(.28f)
+                radius = outerRadius,
+                color = Color.Black
             )
 
-            // Inner orange circle
+            // Inner Orange circle
             drawCircle(
-                color = orange, radius = w.times(.25f)
+                radius = innerOrangeRadius,
+                color = orangeColor
             )
 
-            // Black outlined circle
+            // Black stroked circle
             drawCircle(
-                color = Color.Black, radius = w.times(.16f), style = Stroke(width = 6f)
+                radius = blackStrokeRadius,
+                color = Color.Black,
+                style = Stroke(width = 6f)
             )
 
-            // Core black circle
+            // Core Black circle
             drawCircle(
-                color = Color.Black, radius = w.times(.05f)
+                radius = coreBlackRadius,
+                color = Color.Black
             )
 
+            // 3 Beads
             val arc = Path().apply {
-                val r = -w.times(.16f) + 2
-                moveTo(r, 23f)
+                val offset = blackStrokeRadius + 2
+                moveTo(-offset, 23f)
                 relativeQuadraticBezierTo(
                     dx1 = -50f,
                     dy1 = 10f,
-                    dx2 = -66.1f,
+                    dx2 = -66f,
                     dy2 = -70f
                 )
                 relativeQuadraticBezierTo(
@@ -154,10 +159,9 @@ fun Sharingan() {
                 close()
             }
 
-            // All 3 beads
             translate(
                 left = center.x,
-                top = center.y,
+                top = center.y
             ) {
                 repeat(3) {
                     rotate(
@@ -166,14 +170,14 @@ fun Sharingan() {
                     ) {
 
                         drawCircle(
-                            color = Color.Black.copy(1 - animatedApha),
-                            radius = w.times(.030f),
-                            center = Offset(-w.times(.16f), 0f)
+                            radius = beadRadius,
+                            color = Color.Black.copy(1 - animatedAlpha),
+                            center = Offset(-blackStrokeRadius, 0f)
                         )
 
                         drawPath(
                             path = arc,
-                            color = Color.Black.copy(1 - animatedApha),
+                            color = Color.Black.copy(1 - animatedAlpha)
                         )
 
                     }
@@ -181,35 +185,30 @@ fun Sharingan() {
             }
 
             // Ninja Arc
-            val radius = -w.times(.24f)
+            val innerRadiusStroke = -w.times(.24f)
+            val halfInnerRadiusStroke = -w.times(.24f) / 2
 
             val ninjaStarPath = Path().apply {
-
                 val xInitial = -40f
                 val yInitial = -60f
 
                 moveTo(xInitial, yInitial)
+
                 lineTo(
-                    x = 20f,
-                    y = 14f
+                    20f,
+                    14f
                 )
 
                 cubicTo(
-                    x1 = -50f,
-                    y1 = 120f,
-                    x2 = -w.times(.12f) - 50,
-                    y2 = 110f,
-                    x3 = radius,
-                    y3 = 53f
+                    x1 = -50f, y1 = 120f,
+                    x2 = halfInnerRadiusStroke - 50, y2 = 110f,
+                    x3 = innerRadiusStroke, y3 = 53f,
                 )
 
                 cubicTo(
-                    x1 = -w.times(.12f) - 90,
-                    y1 = 75f,
-                    x2 = -w.times(.12f) + 76,
-                    y2 = 70f,
-                    x3 = xInitial,
-                    y3 = yInitial
+                    x1 = halfInnerRadiusStroke - 90f, y1 = 75f,
+                    x2 = halfInnerRadiusStroke + 76, y2 = 70f,
+                    x3 = xInitial, y3 = yInitial,
                 )
 
                 close()
@@ -217,11 +216,11 @@ fun Sharingan() {
 
             translate(
                 left = center.x,
-                top = center.y,
+                top = center.y
             ) {
 
                 rotate(
-                    degrees = animatedAngle + 30,
+                    degrees = 30f,
                     pivot = Offset.Zero
                 ) {
                     scale(
@@ -229,34 +228,33 @@ fun Sharingan() {
                         pivot = Offset.Zero
                     ) {
                         repeat(3) {
-
                             rotate(
                                 (120 * it).toFloat(),
                                 pivot = Offset.Zero
                             ) {
                                 drawPath(
                                     path = ninjaStarPath,
-                                    color = Color.Black.copy(alpha = animatedApha),
+                                    color = Color.Black.copy(animatedAlpha)
                                 )
-
                             }
                         }
-
                         drawCircle(
-                            center = Offset.Zero, color = orange.copy(alpha = animatedApha), radius = 30f
+                            radius = 30f,
+                            color = orangeColor.copy(animatedAlpha),
+                            center = Offset.Zero
                         )
-
                     }
                 }
             }
 
         }
+
     }
 
 }
 
 @Preview
 @Composable
-fun ComposablePreview() {
+fun Preview() {
     Sharingan()
 }
